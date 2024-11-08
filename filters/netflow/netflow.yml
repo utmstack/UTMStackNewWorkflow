@@ -1,0 +1,41 @@
+# Netflow firewall module filter, version 3.0.0
+# Based in docs and Netflow Generator (Solarwinds) for send log
+# 
+# Documentations
+# 1- https://www.cisco.com/en/US/technologies/tk648/tk362/technologies_white_paper09186a00800a3db9.html 
+# 2- http://www.iana.org/assignments/ipfix/ipfix.xhtml 
+# 3- https://helpdesk.kaseya.com/hc/en-gb/articles/115003522631-How-to-view-NetFlow-in-WireShark 
+# 4- https://www.solarwinds.com/free-tools/
+# 
+# Implementation
+# 1. Parsing the RAW field containing the Netflow
+pipeline:
+  - dataTypes:
+      - netflow
+    steps:
+
+      # Using the kv filter with default config, usefull in key-value logs
+      - kv:
+          fieldSplit: " "
+          valueSplit: "="
+
+      # Rename filds
+      - rename:
+          from:
+            - log.srcIp
+          to: from.ip
+      - rename:
+          from:
+            - log.dstIp
+          to: to.ip
+      - rename:
+          from:
+            - log.proto
+          to: protocol
+
+      # Fields conversions
+      - cast:
+          to: 'int64'
+          fields:
+            - log.srcPort
+            - log.dstPort

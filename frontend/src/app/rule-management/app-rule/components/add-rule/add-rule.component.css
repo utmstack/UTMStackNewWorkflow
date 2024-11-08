@@ -1,0 +1,97 @@
+
+.btn-close {
+    height: 36px;
+}
+
+.btn-danger .icon-trash,
+.btn-close .icon-trash:before {
+    font-size: 14px;
+    color: white;
+}
+
+legend {
+    width: auto;
+    border-bottom: 0;
+    font-size: .75rem;
+    font-weight: 400;
+}
+
+fieldset {
+    margin-bottom: 1rem;
+}
+
+.container-fluid {
+    padding: 0.5rem 1rem;
+}
+
+.d-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flex-nowrap {
+    flex-wrap: nowrap;
+}
+
+.alert-filter-container {
+    min-width: 300px;
+    max-width: 400px;
+    resize: horizontal;
+    overflow: auto;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    flex-shrink: 0;
+}
+
+
+.utm-button-back {
+    left: 250px;
+}
+
+/*.references-container {
+    max-height: 132px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 5px;
+}*/
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.form-body {
+  max-height: 700px;
+  overflow-y: auto!important;
+  overflow-x: hidden!important;
+  flex-grow: 1;
+}
+
+.type-select .ng-select-container {
+    height: 36px!important;
+}
+
+
+@media (max-width: 4000px) {
+    .alert-filter-container {
+        width: 350px;
+    }
+}
+
+@media (min-width: 4001px) {
+    .alert-filter-container {
+        width: 400px;
+    }
+
+    .utm-button-back {
+        left: 350px;
+    }
+}

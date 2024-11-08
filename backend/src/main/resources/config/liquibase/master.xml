@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <include file="config/liquibase/changelog/20231013001_init_database.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231017001_update_syslog_macos_and_generic_pipeline.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20231017002_adding_menu_and_index_pattern_syslog_module.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20231017003_updating_logstash_filters.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231020001_removing_netflow_integration.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231025001_updating_old_gcp_configurations.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231026001_updating_data_source_config_values.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231027001_removing_ufw_and_linuxlogs_integrations.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231104001_fix_user_default_password.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231120001_fixing_soc_ai_integration_function.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20231120002_add_ad_audit.xml" relativeToChangelogFile="false"/>
+    <include file="config/liquibase/changelog/20231120003_added_entity_UtmComplianceReportSchedule.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231215001_updating_azure_filter.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231218001_add_compliance_schedule_menu.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231129001_updating_mikrotik_filter.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20231229001_updating_syslog_json_generic_filters.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20240108001_add_column_section_active_to_utm_configuration_section_table.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20240109001_modifying_requirement_for_configuration_parameters.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20240117002_add_getting_started_step.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20240131001_add_default_agent_utm_alert_response_rule.xml" relativeToChangelogFile="false"/>
+  
+    <include file="config/liquibase/changelog/20240205001_add_entity_IncidentResponseVariables.xml" relativeToChangelogFile="false"/>
+
+    <include file="config/liquibase/changelog/20240305001_fixing_smtp_server_encryption_type.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240311001_update_configuration_parameter_with_regexp.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240326001_adding_pfsense.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240403001_adding_netflow.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240403002_adding_fortiweb.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240403003_adding_aix.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240405001_disable_unused_modules.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240410001_add_threatwinds_menu.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240419001_updating_pfsense_filter.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240424001_updating_category_aix_fortiweb.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240506001_adding_as_400.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240517001_add_collectors_source_menu.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240626001_added_entity_UtmCorrelationRule.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240701001_added_entity_UtmRegexPattern_UtmTenantConfig.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240710001_update_logstash_pipelines.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240711001_updating_UtmLogstashFilter.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240819001_add_audit_column_utm_logstash_filter.xml" relativeToChangelogFile="false"/>
+
+    <include file="/config/liquibase/changelog/20240820001_add_notification.xml" relativeToChangelogFile="false"/>
+
+
+</databaseChangeLog>
