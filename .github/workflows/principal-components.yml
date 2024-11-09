@@ -42,9 +42,9 @@ jobs:
         run: |
           export GITHUB_WORKSPACE=${{ github.workspace }}
           export API_NAME=$(eval echo \CM_API_$(echo ${{ needs.setup_environment.outputs.env_tag }} | tr 'a-z' 'A-Z'))
-          export CM_API=${{ secrets[API_NAME] }}
+          export CM_API=${{ secrets[echo $API_NAME] }}
           export AUTH_NAME=$(eval echo \CM_PUB_AUTH_$(echo ${{ needs.setup_environment.outputs.env_tag }} | tr 'a-z' 'A-Z'))
-          export CM_PUB_AUTH=${{ secrets[AUTH_NAME] }}
+          export CM_PUB_AUTH=${{ secrets[echo $AUTH_NAME] }}
 
           ${{ github.workspace }}/.github/scripts/compare_versions.sh
   
