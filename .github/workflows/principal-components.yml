@@ -81,17 +81,40 @@ jobs:
         id: go
 
       - name: Build and sign services
+        env:
+          CM_API_DEV: ${{ secrets.CM_API_DEV }}
+          CM_API_QA: ${{ secrets.CM_API_QA }}
+          CM_API_PROD: ${{ secrets.CM_API_PROD }}
+          CM_PUB_AUTH_DEV: ${{ secrets.CM_PUB_AUTH_DEV }}
+          CM_PUB_AUTH_QA: ${{ secrets.CM_PUB_AUTH_QA }}
+          CM_PUB_AUTH_PROD: ${{ secrets.CM_PUB_AUTH_PROD }}
+          AGENT_SECRET_PREFIX: ${{ secrets.AGENT_SECRET_PREFIX }}
+          SIGN_CERT: ${{ secrets.SIGN_CERT }}
+          SIGN_KEY: ${{ secrets.SIGN_KEY }}
+          SIGN_CONTAINER: ${{ secrets.SIGN_CONTAINER }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          ENV_TAG: ${{ needs.setup_environment.outputs.env_tag }}
         run: |
-          $env:CM_API = '${{ secrets.["CM_API_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
-          $env:CM_PUB_AUTH = '${{ secrets.["CM_PUB_AUTH_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
-          $env:GITHUB_WORKSPACE = '${{ github.workspace }}'
-          $env:SCRIPT_SERVICES = '${{ needs.setup_services.outputs.script_services }}'
-          $env:AGENT_SECRET_PREFIX = '${{ secrets.AGENT_SECRET_PREFIX }}'
-          $env:SIGN_CERT = '${{ secrets.SIGN_CERT }}'
-          $env:SIGN_KEY = '${{ secrets.SIGN_KEY }}'
-          $env:SIGN_CONTAINER = '${{ secrets.SIGN_CONTAINER }}'
+          $env:UPPER_ENV_TAG = $env:ENV_TAG.ToUpper()
 
-          ${{ github.workspace }}/.github/scripts/build_and_sign_scripts.ps1
+          if ($env:UPPER_ENV_TAG -eq "DEV") {
+            $env:CM_API = $env:CM_API_DEV
+            $env:CM_PUB_AUTH = $env:CM_PUB_AUTH_DEV
+          }
+          elseif ($env:UPPER_ENV_TAG -eq "QA") {
+            $env:CM_API = $env:CM_API_QA
+            $env:CM_PUB_AUTH = $env:CM_PUB_AUTH_QA
+          }
+          elseif ($env:UPPER_ENV_TAG -eq "PROD") {
+            $env:CM_API = $env:CM_API_PROD
+            $env:CM_PUB_AUTH = $env:CM_PUB_AUTH_PROD
+          }
+          else {
+            Write-Host "Unknown environment tag: $env:ENV_TAG"
+            exit 1
+          }
+
+          $GITHUB_WORKSPACE/.github/scripts/build_and_sign_scripts.ps1
       
   build_images:
     name: Build Images
