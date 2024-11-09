@@ -1,0 +1,98 @@
+name: Components Update
+
+on:
+  release:
+    types: [ 'released' ]
+  push:
+    branches: [ 'main', 'feature/**' ]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  setup_environment:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    outputs:
+      env_tag: ${{ steps.set-env.outputs.env_tag }}
+    steps:
+      - name: Set Environment Variables
+        run: |
+          echo "GITHUB_EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
+          echo "GITHUB_REF=${{ github.ref }}" >> $GITHUB_ENV
+          echo "GITHUB_REVIEW_STATE=${{ github.event.review.state }}" >> $GITHUB_ENV
+          echo "GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
+          echo "GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
+
+      - name: Determine Build Environment
+        id: set-env
+        run: |
+          ${{ github.workspace }}/.github/scripts/determine-environment.sh
+      
+  setup_services:
+    name: Setup Changed Services
+    needs: setup_environment
+    if: ${{ needs.setup_environment.outputs.env_tag != '' }}
+    runs-on: ubuntu-latest
+    outputs:
+      script_services: ${{ steps.compare_versions.outputs.script_services }}
+      image_services: ${{ steps.compare_versions.outputs.image_services }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set Environment Variables
+        run: |
+          echo "GITHUB_WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV
+          echo "CM_API=${{ secrets['CM_API_' + needs.setup_environment.outputs.env_tag | upper] }}" >> $GITHUB_ENV
+          echo "CM_PUB_AUTH=${{ secrets['CM_PUB_AUTH_' + needs.setup_environment.outputs.env_tag | upper] }}" >> $GITHUB_ENV
+
+      - name: Compare Versions
+        id: compare_versions
+        run: |
+          ${{ github.workspace }}/.github/scripts/compare_versions.sh
+  
+  build_scripts:
+    name: Build Scripts
+    needs: setup_services
+    if: needs.setup_services.outputs.script_services != ''
+    runs-on: signing
+    steps:
+      - uses: actions/checkout@v4
+        
+      - name: Set up Go 1.x
+        uses: actions/setup-go@v5
+        with:
+          go-version: ^1.20
+        id: go
+
+      - name: Set Environment Variables
+        run: |
+          $env:CM_API = '${{ secrets.["CM_API_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
+          $env:CM_PUB_AUTH = '${{ secrets.["CM_PUB_AUTH_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
+          $env:GITHUB_WORKSPACE = '${{ github.workspace }}'
+          $env:SCRIPT_SERVICES = '${{ needs.setup_services.outputs.script_services }}'
+          $env:AGENT_SECRET_PREFIX = '${{ secrets.AGENT_SECRET_PREFIX }}'
+          $env:SIGN_CERT = '${{ secrets.SIGN_CERT }}'
+          $env:SIGN_KEY = '${{ secrets.SIGN_KEY }}'
+          $env:SIGN_CONTAINER = '${{ secrets.SIGN_CONTAINER }}'
+
+      - name: Build and sign services
+        run: |
+          ${{ github.workspace }}/.github/scripts/build_and_sign_scripts.ps1
+      
+  build_images:
+    name: Build Images
+    needs: setup_services
+    if: ${{ needs.setup_services.outputs.image_services != '[]' }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include: ${{ fromJson(needs.setup_services.outputs.image_services) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Call Reusable Workflow for ${{ matrix.name }}
+        uses: ./.github/workflows/${{ matrix.workflow }}
+        with:
+          image_name: ${{ matrix.name }}
+          environment: ${{ needs.setup_environment.outputs.env_tag }}
+          version: ${{ matrix.version }}
