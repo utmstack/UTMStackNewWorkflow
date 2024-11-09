@@ -15,17 +15,15 @@ jobs:
     outputs:
       env_tag: ${{ steps.set-env.outputs.env_tag }}
     steps:
-      - name: Set Environment Variables
-        run: |
-          echo "GITHUB_EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
-          echo "GITHUB_REF=${{ github.ref }}" >> $GITHUB_ENV
-          echo "GITHUB_REVIEW_STATE=${{ github.event.review.state }}" >> $GITHUB_ENV
-          echo "GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
-          echo "GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
-
       - name: Determine Build Environment
         id: set-env
         run: |
+          export GITHUB_EVENT_NAME=${{ github.event_name }}
+          export GITHUB_REF=${{ github.ref }}
+          export GITHUB_REVIEW_STATE=${{ github.event.review.state }}
+          export GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}
+          export GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}
+        
           ${{ github.workspace }}/.github/scripts/determine-environment.sh
       
   setup_services:
@@ -39,15 +37,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set Environment Variables
-        run: |
-          echo "GITHUB_WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV
-          echo "CM_API=${{ secrets[format('CM_API_{0}', needs.setup_environment.outputs.env_tag | upper)] }}" >> $GITHUB_ENV
-          echo "CM_PUB_AUTH=${{ secrets[format('CM_PUB_AUTH_{0}', needs.setup_environment.outputs.env_tag | upper)] }}" >> $GITHUB_ENV
-
       - name: Compare Versions
         id: compare_versions
         run: |
+          export GITHUB_WORKSPACE=${{ github.workspace }}
+          export API_NAME=$(eval echo \CM_API_$(echo ${{ needs.setup_environment.outputs.env_tag }} | tr 'a-z' 'A-Z'))
+          export CM_API=${{ secrets[API_NAME] }}
+          export AUTH_NAME=$(eval echo \CM_PUB_AUTH_$(echo ${{ needs.setup_environment.outputs.env_tag }} | tr 'a-z' 'A-Z'))
+          export CM_PUB_AUTH=${{ secrets[AUTH_NAME] }}
+
           ${{ github.workspace }}/.github/scripts/compare_versions.sh
   
   build_scripts:
@@ -64,7 +62,7 @@ jobs:
           go-version: ^1.20
         id: go
 
-      - name: Set Environment Variables
+      - name: Build and sign services
         run: |
           $env:CM_API = '${{ secrets.["CM_API_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
           $env:CM_PUB_AUTH = '${{ secrets.["CM_PUB_AUTH_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
@@ -75,8 +73,6 @@ jobs:
           $env:SIGN_KEY = '${{ secrets.SIGN_KEY }}'
           $env:SIGN_CONTAINER = '${{ secrets.SIGN_CONTAINER }}'
 
-      - name: Build and sign services
-        run: |
           ${{ github.workspace }}/.github/scripts/build_and_sign_scripts.ps1
       
   build_images:
