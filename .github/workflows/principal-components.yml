@@ -39,14 +39,32 @@ jobs:
 
       - name: Compare Versions
         id: compare_versions
+        env:
+          CM_API_DEV: ${{ secrets.CM_API_DEV }}
+          CM_API_QA: ${{ secrets.CM_API_QA }}
+          CM_API_PROD: ${{ secrets.CM_API_PROD }}
+          CM_PUB_AUTH_DEV: ${{ secrets.CM_PUB_AUTH_DEV }}
+          CM_PUB_AUTH_QA: ${{ secrets.CM_PUB_AUTH_QA }}
+          CM_PUB_AUTH_PROD: ${{ secrets.CM_PUB_AUTH_PROD }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          ENV_TAG: ${{ needs.setup_environment.outputs.env_tag }}
         run: |
-          export GITHUB_WORKSPACE=${{ github.workspace }}
-          export API_NAME=$(eval echo \CM_API_$(echo ${{ needs.setup_environment.outputs.env_tag }} | tr 'a-z' 'A-Z'))
-          export CM_API=${{ secrets[$API_NAME] }}
-          export AUTH_NAME=$(eval echo \CM_PUB_AUTH_$(echo ${{ needs.setup_environment.outputs.env_tag }} | tr 'a-z' 'A-Z'))
-          export CM_PUB_AUTH=${{ secrets[$AUTH_NAME] }}
+          UPPER_ENV_TAG=$(echo "$ENV_TAG" | tr 'a-z' 'A-Z')
+          if [ "$UPPER_ENV_TAG" = "DEV" ]; then
+            export CM_API="$CM_API_DEV"
+            export CM_PUB_AUTH="$CM_PUB_AUTH_DEV"
+          elif [ "$UPPER_ENV_TAG" = "QA" ]; then
+            export CM_API="$CM_API_QA"
+            export CM_PUB_AUTH="$CM_PUB_AUTH_QA"
+          elif [ "$UPPER_ENV_TAG" = "PROD" ]; then
+            export CM_API="$CM_API_PROD"
+            export CM_PUB_AUTH="$CM_PUB_AUTH_PROD"
+          else
+            echo "Unknown environment tag: $ENV_TAG"
+            exit 1
+          fi
 
-          ${{ github.workspace }}/.github/scripts/compare_versions.sh
+          $GITHUB_WORKSPACE/.github/scripts/compare_versions.sh
   
   build_scripts:
     name: Build Scripts
