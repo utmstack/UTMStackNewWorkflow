@@ -42,8 +42,8 @@ jobs:
       - name: Set Environment Variables
         run: |
           echo "GITHUB_WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV
-          echo "CM_API=${{ secrets['CM_API_' + needs.setup_environment.outputs.env_tag | upper] }}" >> $GITHUB_ENV
-          echo "CM_PUB_AUTH=${{ secrets['CM_PUB_AUTH_' + needs.setup_environment.outputs.env_tag | upper] }}" >> $GITHUB_ENV
+          echo "CM_API=${{ secrets[format('CM_API_{0}', needs.setup_environment.outputs.env_tag | upper)] }}" >> $GITHUB_ENV
+          echo "CM_PUB_AUTH=${{ secrets[format('CM_PUB_AUTH_{0}', needs.setup_environment.outputs.env_tag | upper)] }}" >> $GITHUB_ENV
 
       - name: Compare Versions
         id: compare_versions
