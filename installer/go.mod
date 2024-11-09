@@ -10,7 +10,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/threatwinds/go-sdk v0.6.3
-	github.com/threatwinds/logger v1.1.11
+	github.com/threatwinds/logger v1.1.12
 	gopkg.in/yaml.v3 v3.0.1
 )
 
