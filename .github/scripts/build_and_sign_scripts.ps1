@@ -7,12 +7,18 @@ $signKey = $env:SIGN_KEY
 $signContainer = $env:SIGN_CONTAINER
 $url = $env:CM_API
 
+Write-Output "Services: $services"
+Write-Output "Workspace: $workspace"
+Write-Output "URL: $url"
+
 # Parse JSON from CM_PUB_AUTH
 &auth = $env:CM_PUB_AUTH | ConvertFrom-Json
 
 # Load versions.json
 $versionsJsonPath = Join-Path $workspace "versions.json"
+Write-Output "Loading versions.json from: $versionsJsonPath"
 $versionsContent = Get-Content -Path $versionsJsonPath -Raw | ConvertFrom-Json
+Write-Output "Versions: $versionsContent"
 
 # Create a http client
 $httpClient = New-Object System.Net.Http.HttpClient
@@ -46,6 +52,7 @@ catch {
 
 # Upsert Component Version, Scripts and Files
 foreach ($service in $services) {
+    Write-Output "Processing service: $service"
     $path = $service -replace "-", "/"
     $servicePath = "$workspace/$path"
 

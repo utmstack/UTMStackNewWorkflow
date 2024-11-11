@@ -63,6 +63,7 @@ jobs:
             exit 1
           fi
 
+          chmod +x $GITHUB_WORKSPACE/.github/scripts/upload_image.sh
           chmod +x $GITHUB_WORKSPACE/.github/scripts/compare_versions.sh
           $GITHUB_WORKSPACE/.github/scripts/compare_versions.sh
   
@@ -114,7 +115,7 @@ jobs:
             exit 1
           }
 
-          $GITHUB_WORKSPACE/.github/scripts/build_and_sign_scripts.ps1
+          & "$env:GITHUB_WORKSPACE/.github/scripts/build_and_sign_scripts.ps1"
       
   build_images:
     name: Build Images
