@@ -142,7 +142,7 @@ foreach ($service in $services) {
             $response = $httpClient.PostAsync("$url/upload-file", $multipartContent).Result
             if ($response.IsSuccessStatusCode) {
                 $responseContent = $response.Content.ReadAsStringAsync().Result
-                Write-Output "Upload Response for $fileName:"
+                Write-Output "Upload Response for ${fileName}:"
                 Write-Output $responseContent
             }
             else {
@@ -151,7 +151,7 @@ foreach ($service in $services) {
             }
         }
         catch {
-            Write-Error "Error in file upload for $fileName: $_"
+            Write-Error "Error in file upload for ${fileName}: $_"
             throw $_
         }
     }    
