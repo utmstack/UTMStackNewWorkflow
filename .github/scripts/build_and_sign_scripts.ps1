@@ -12,7 +12,7 @@ Write-Output "Workspace: $workspace"
 Write-Output "URL: $url"
 
 # Parse JSON from CM_PUB_AUTH
-&auth = $env:CM_PUB_AUTH | ConvertFrom-Json
+$auth = $env:CM_PUB_AUTH | ConvertFrom-Json
 
 # Load versions.json
 $versionsJsonPath = Join-Path $workspace "versions.json"
