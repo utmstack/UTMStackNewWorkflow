@@ -69,7 +69,9 @@ jobs:
   
   build_scripts:
     name: Build Scripts
-    needs: setup_services
+    needs: 
+      - setup_services
+      - setup_environment
     if: needs.setup_services.outputs.script_services != ''
     runs-on: signing
     steps:
@@ -95,6 +97,7 @@ jobs:
           SIGN_CONTAINER: ${{ secrets.SIGN_CONTAINER }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
           ENV_TAG: ${{ needs.setup_environment.outputs.env_tag }}
+          SCRIPT_SERVICES: ${{ needs.setup_services.outputs.script_services }}
         run: |
           $env:UPPER_ENV_TAG = $env:ENV_TAG.ToUpper()
 
@@ -119,7 +122,9 @@ jobs:
       
   build_images:
     name: Build Images
-    needs: setup_services
+    needs: 
+      - setup_services
+      - setup_environment
     if: ${{ needs.setup_services.outputs.image_services != '[]' }}
     runs-on: ubuntu-latest
     strategy:
