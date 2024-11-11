@@ -121,8 +121,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-          'C:\Program Files\Python312\python.exe' '$env:GITHUB_WORKSPACE/.github/scripts/build_and_sign_scripts.py'
-      
+          & "C:\Program Files\Python312\python.exe" "$env:GITHUB_WORKSPACE/.github/scripts/build_and_sign_scripts.py"
+
   build_images:
     name: Build Images
     needs: 
