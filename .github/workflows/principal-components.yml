@@ -15,6 +15,7 @@ jobs:
     outputs:
       env_tag: ${{ steps.set-env.outputs.env_tag }}
     steps:
+      - uses: actions/checkout@v4
       - name: Determine Build Environment
         id: set-env
         run: |
