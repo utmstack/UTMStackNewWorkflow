@@ -21,7 +21,8 @@ jobs:
           export GITHUB_REVIEW_STATE=${{ github.event.review.state }}
           export GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}
           export GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}
-        
+
+          chmod +x ${{ github.workspace }}/.github/scripts/determine_environment.sh
           ${{ github.workspace }}/.github/scripts/determine_environment.sh
       
   setup_services:
