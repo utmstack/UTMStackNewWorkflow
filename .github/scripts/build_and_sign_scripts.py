@@ -129,8 +129,8 @@ def main():
             print(f"Changed directory to: {service_path}")
 
             # Upsert Component Version
-            changelog_path = os.path.join(workspace, service, 'CHANGELOG.md')
-            readme_path = os.path.join(workspace, service, 'README.md')
+            changelog_path = os.path.join(service_path, 'CHANGELOG.md')
+            readme_path = os.path.join(service_path, 'README.md')
             files_path = os.path.join(service_path, 'files.json')
 
             print(f"Loading component changelog from: {changelog_path}")
