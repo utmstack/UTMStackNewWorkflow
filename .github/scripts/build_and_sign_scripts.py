@@ -2,7 +2,6 @@ import os
 import json
 import subprocess
 import requests
-import uuid
 import shutil
 import sys
 
@@ -203,15 +202,27 @@ def main():
                     # Build and sign the file if it's not a dependency
                     os.environ['GOOS'] = file.get('os', '')
                     os.environ['GOARCH'] = file.get('arch', '')
-                    print(f"Building {file_name} for {os.environ['GOOS']} {os.environ['GOARCH']}...")
+                    # Optionally disable Cgo for cross-compiling
+                    os.environ['CGO_ENABLED'] = '0'
+                    print(f"Building {file_name} for {os.environ['GOOS']} {os.environ['GOARCH']} with CGO_ENABLED={os.environ['CGO_ENABLED']}...")
+
+                    # Fetch dependencies before building
+                    print("Fetching Go module dependencies...")
+                    mod_command = ['go', 'mod', 'tidy']
+                    try:
+                        mod_result = subprocess.run(mod_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        print(f"Go modules fetched successfully. Output:\n{mod_result.stdout}")
+                    except subprocess.CalledProcessError as e:
+                        print(f"Error fetching Go modules: {e.stderr}")
+                        raise
 
                     # Run 'go build' command
                     build_command = ['go', 'build', '-o', file_name, '-v', '.']
                     try:
-                        subprocess.run(build_command, check=True)
-                        print(f"Built {file_name} successfully.")
+                        result = subprocess.run(build_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                        print(f"Built {file_name} successfully. Output:\n{result.stdout}")
                     except subprocess.CalledProcessError as e:
-                        print(f"Error building {file_name}: {e}")
+                        print(f"Error building {file_name}: {e.stderr}")
                         raise
 
                     if os.environ['GOOS'].lower() == 'windows':
@@ -229,10 +240,10 @@ def main():
                             file_name
                         ]
                         try:
-                            subprocess.run(signtool_command, check=True)
-                            print(f"Signed {file_name} successfully.")
+                            result = subprocess.run(signtool_command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                            print(f"Signed {file_name} successfully. Output:\n{result.stdout}")
                         except subprocess.CalledProcessError as e:
-                            print(f"Error signing {file_name}: {e}")
+                            print(f"Error signing {file_name}: {e.stderr}")
                             raise
 
                     file_path = os.path.join(service_path, file_name)
