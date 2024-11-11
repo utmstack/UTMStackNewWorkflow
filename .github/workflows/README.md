@@ -18,7 +18,7 @@ __Note__: only one feature per version.
 12. After test on RC, create a new release that will activate release actions.
 
 ## Hotfix
-1. Create branch from main for the hotfix.
+1. Create branch from main for the hotfix
 2. Every developer related to the hotfix works on this branch. 
 3. When they finish, they make a PR to main.
 4. After this PR is merged to main, the rc actions are activated, and the rc images are generated.
