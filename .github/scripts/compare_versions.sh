@@ -50,3 +50,4 @@ echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
 echo "image_services=${image_services_json}" >> $GITHUB_OUTPUT
 
 ./upload_image.sh "$image_services_output"
+$GITHUB_WORKSPACE/.github/scripts/upload_image.sh
