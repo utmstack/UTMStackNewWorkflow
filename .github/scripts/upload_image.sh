@@ -40,13 +40,8 @@ master_version_response=$(curl -s -X POST "$url/master-version" \
     -H "Content-Type: application/json" \
     -d "$master_version_data")
 
-master_version_id=$(echo "$master_version_response" | jq -r '.id')
-if [[ -z "$master_version_id" ]]; then
-    echo "error creating master version: $master_version_response"
-    exit 1
-else
-    echo "Master Version ID: $master_version_id"
-fi
+master_version_id="$master_version_response"
+echo "Master Version ID: $master_version_id"
 
 for service in "${services[@]}"; do
     echo "Processing service: $service"
@@ -70,11 +65,6 @@ for service in "${services[@]}"; do
         -H "Content-Type: application/json" \
         -d "$component_version_data")
 
-    component_version_id=$(echo "$component_version_response" | jq -r '.id')
-    if [[ -z "$component_version_id" ]]; then
-        echo "Error creating component version for $service: $component_version_response"
-        continue
-    else
-        echo "Component Version ID for $service: $component_version_id"
-    fi
+    component_version_id="$component_version_response"
+    echo "Component Version ID: $component_version_id"
 done
