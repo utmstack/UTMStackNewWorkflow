@@ -9,6 +9,9 @@ on:
       environment:
         required: true
         type: string
+      version:
+        required: true
+        type: string
 jobs:
   build:
     name: Build
@@ -43,4 +46,4 @@ jobs:
         with:
           context: ./${{inputs.image_name}}
           push: true
-          tags: ghcr.io/utmstack/utmstack/${{inputs.image_name}}:${{inputs.environment}}
+          tags: ghcr.io/utmstack/utmstack/${{inputs.image_name}}:${{inputs.version}}-${{inputs.environment}}

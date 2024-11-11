@@ -127,9 +127,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Call Reusable Workflow for ${{ matrix.name }}
-        uses: ./.github/workflows/${{ matrix.workflow }}
+      - name: Call Reusable Workflow
+        uses: ./.github/workflows/used-runner.yml
         with:
-          image_name: ${{ matrix.name }}
+          microservice: ${{ matrix.name }}
           environment: ${{ needs.setup_environment.outputs.env_tag }}
           version: ${{ matrix.version }}

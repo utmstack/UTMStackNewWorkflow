@@ -8,6 +8,9 @@ on:
       environment:
         required: true
         type: string
+      version:
+        required: true
+        type: string
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -41,4 +44,4 @@ jobs:
         with:
           context: /home/runner/work/UTMStack/UTMStack/${{inputs.image_name}}/
           push: true
-          tags: ghcr.io/utmstack/utmstack/${{inputs.image_name}}:${{inputs.environment}}
+          tags: ghcr.io/utmstack/utmstack/${{inputs.image_name}}:${{inputs.version}}-${{inputs.environment}}
