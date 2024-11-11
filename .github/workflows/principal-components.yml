@@ -22,7 +22,7 @@ jobs:
           export GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}
           export GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}
         
-          ${{ github.workspace }}/.github/scripts/determine-environment.sh
+          ${{ github.workspace }}/.github/scripts/determine_environment.sh
       
   setup_services:
     name: Setup Changed Services
