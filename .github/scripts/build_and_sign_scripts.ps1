@@ -21,19 +21,27 @@ $versionsContent = Get-Content -Path $versionsJsonPath -Raw | ConvertFrom-Json
 Write-Output "Versions: $versionsContent"
 
 # Set up headers
+Write-Output "Setting up headers..."
 $headers = @{
     "publisher-key" = $auth.key
     "publisher-id"  = $auth.id
 }
+Write-Output "Headers set: $headers"
 
 # Upsert Master Version
 $masterChangelogPath = Join-Path $workspace "CHANGELOG.md"
+Write-Output "Loading master changelog from: $masterChangelogPath"
 $masterChangelog = Get-Content -Path $masterChangelogPath -Raw
 
+Write-Output "Preparing master version data..."
 $masterVersionData = @{
     changelog = $masterChangelog
     version_name = $versionsContent.version
 } | ConvertTo-Json -Depth 10
+
+Write-Output "Master version data prepared: $masterVersionData"
+
+Write-Output "Attempting to upsert Master Version..."
 
 try {
     $response = Invoke-RestMethod -Uri "$url/master-version" -Method Post -Headers $headers -ContentType 'application/json' -Body $masterVersionData
@@ -44,6 +52,9 @@ catch {
     Write-Error "Error in Master Version POST request: $_"
     throw $_
 }
+
+Write-Output "Master Version upserted successfully."
+
 
 # Upsert Component Version, Scripts, and Files
 foreach ($service in $services) {
