@@ -63,6 +63,7 @@ jobs:
             exit 1
           fi
 
+          chmod +x $GITHUB_WORKSPACE/.github/scripts/compare_versions.sh
           $GITHUB_WORKSPACE/.github/scripts/compare_versions.sh
   
   build_scripts:
