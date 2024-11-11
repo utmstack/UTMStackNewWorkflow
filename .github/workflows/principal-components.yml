@@ -4,10 +4,7 @@ on:
   release:
     types: [ 'released' ]
   push:
-    branches: [ 'main', 'feature/**' ]
-  pull_request_review:
-    types: [submitted]
-
+    branches: [ 'feature/**' ]
 jobs:
   setup_environment:
     name: Setup Environment
@@ -15,17 +12,16 @@ jobs:
     outputs:
       env_tag: ${{ steps.set-env.outputs.env_tag }}
     steps:
-      - name: Set Environment Variables
-        run: |
-          echo "GITHUB_EVENT_NAME=${{ github.event_name }}" >> $GITHUB_ENV
-          echo "GITHUB_REF=${{ github.ref }}" >> $GITHUB_ENV
-          echo "GITHUB_REVIEW_STATE=${{ github.event.review.state }}" >> $GITHUB_ENV
-          echo "GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}" >> $GITHUB_ENV
-          echo "GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}" >> $GITHUB_ENV
-
+      - uses: actions/checkout@v4
       - name: Determine Build Environment
         id: set-env
         run: |
+          export GITHUB_EVENT_NAME=${{ github.event_name }}
+          export GITHUB_REF=${{ github.ref }}
+          export GITHUB_REVIEW_STATE=${{ github.event.review.state }}
+          export GITHUB_BASE_REF=${{ github.event.pull_request.base.ref }}
+          export GITHUB_HEAD_REF=${{ github.event.pull_request.head.ref }}
+        
           ${{ github.workspace }}/.github/scripts/determine-environment.sh
       
   setup_services:
@@ -39,16 +35,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set Environment Variables
-        run: |
-          echo "GITHUB_WORKSPACE=${{ github.workspace }}" >> $GITHUB_ENV
-          echo "CM_API=${{ secrets['CM_API_' + needs.setup_environment.outputs.env_tag | upper] }}" >> $GITHUB_ENV
-          echo "CM_PUB_AUTH=${{ secrets['CM_PUB_AUTH_' + needs.setup_environment.outputs.env_tag | upper] }}" >> $GITHUB_ENV
-
       - name: Compare Versions
         id: compare_versions
+        env:
+          CM_API_DEV: ${{ secrets.CM_API_DEV }}
+          CM_API_QA: ${{ secrets.CM_API_QA }}
+          CM_API_PROD: ${{ secrets.CM_API_PROD }}
+          CM_PUB_AUTH_DEV: ${{ secrets.CM_PUB_AUTH_DEV }}
+          CM_PUB_AUTH_QA: ${{ secrets.CM_PUB_AUTH_QA }}
+          CM_PUB_AUTH_PROD: ${{ secrets.CM_PUB_AUTH_PROD }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          ENV_TAG: ${{ needs.setup_environment.outputs.env_tag }}
         run: |
-          ${{ github.workspace }}/.github/scripts/compare_versions.sh
+          UPPER_ENV_TAG=$(echo "$ENV_TAG" | tr 'a-z' 'A-Z')
+          if [ "$UPPER_ENV_TAG" = "DEV" ]; then
+            export CM_API="$CM_API_DEV"
+            export CM_PUB_AUTH="$CM_PUB_AUTH_DEV"
+          elif [ "$UPPER_ENV_TAG" = "QA" ]; then
+            export CM_API="$CM_API_QA"
+            export CM_PUB_AUTH="$CM_PUB_AUTH_QA"
+          elif [ "$UPPER_ENV_TAG" = "PROD" ]; then
+            export CM_API="$CM_API_PROD"
+            export CM_PUB_AUTH="$CM_PUB_AUTH_PROD"
+          else
+            echo "Unknown environment tag: $ENV_TAG"
+            exit 1
+          fi
+
+          $GITHUB_WORKSPACE/.github/scripts/compare_versions.sh
   
   build_scripts:
     name: Build Scripts
@@ -64,20 +78,41 @@ jobs:
           go-version: ^1.20
         id: go
 
-      - name: Set Environment Variables
-        run: |
-          $env:CM_API = '${{ secrets.["CM_API_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
-          $env:CM_PUB_AUTH = '${{ secrets.["CM_PUB_AUTH_${{ needs.setup_environment.outputs.env_tag }}".ToUpper()] }}'
-          $env:GITHUB_WORKSPACE = '${{ github.workspace }}'
-          $env:SCRIPT_SERVICES = '${{ needs.setup_services.outputs.script_services }}'
-          $env:AGENT_SECRET_PREFIX = '${{ secrets.AGENT_SECRET_PREFIX }}'
-          $env:SIGN_CERT = '${{ secrets.SIGN_CERT }}'
-          $env:SIGN_KEY = '${{ secrets.SIGN_KEY }}'
-          $env:SIGN_CONTAINER = '${{ secrets.SIGN_CONTAINER }}'
-
       - name: Build and sign services
+        env:
+          CM_API_DEV: ${{ secrets.CM_API_DEV }}
+          CM_API_QA: ${{ secrets.CM_API_QA }}
+          CM_API_PROD: ${{ secrets.CM_API_PROD }}
+          CM_PUB_AUTH_DEV: ${{ secrets.CM_PUB_AUTH_DEV }}
+          CM_PUB_AUTH_QA: ${{ secrets.CM_PUB_AUTH_QA }}
+          CM_PUB_AUTH_PROD: ${{ secrets.CM_PUB_AUTH_PROD }}
+          AGENT_SECRET_PREFIX: ${{ secrets.AGENT_SECRET_PREFIX }}
+          SIGN_CERT: ${{ secrets.SIGN_CERT }}
+          SIGN_KEY: ${{ secrets.SIGN_KEY }}
+          SIGN_CONTAINER: ${{ secrets.SIGN_CONTAINER }}
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+          ENV_TAG: ${{ needs.setup_environment.outputs.env_tag }}
         run: |
-          ${{ github.workspace }}/.github/scripts/build_and_sign_scripts.ps1
+          $env:UPPER_ENV_TAG = $env:ENV_TAG.ToUpper()
+
+          if ($env:UPPER_ENV_TAG -eq "DEV") {
+            $env:CM_API = $env:CM_API_DEV
+            $env:CM_PUB_AUTH = $env:CM_PUB_AUTH_DEV
+          }
+          elseif ($env:UPPER_ENV_TAG -eq "QA") {
+            $env:CM_API = $env:CM_API_QA
+            $env:CM_PUB_AUTH = $env:CM_PUB_AUTH_QA
+          }
+          elseif ($env:UPPER_ENV_TAG -eq "PROD") {
+            $env:CM_API = $env:CM_API_PROD
+            $env:CM_PUB_AUTH = $env:CM_PUB_AUTH_PROD
+          }
+          else {
+            Write-Host "Unknown environment tag: $env:ENV_TAG"
+            exit 1
+          }
+
+          $GITHUB_WORKSPACE/.github/scripts/build_and_sign_scripts.ps1
       
   build_images:
     name: Build Images
@@ -90,9 +125,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Call Reusable Workflow for ${{ matrix.name }}
-        uses: ./.github/workflows/${{ matrix.workflow }}
+      - name: Call Reusable Workflow
+        uses: ./.github/workflows/used-runner.yml
         with:
-          image_name: ${{ matrix.name }}
+          microservice: ${{ matrix.name }}
           environment: ${{ needs.setup_environment.outputs.env_tag }}
           version: ${{ matrix.version }}

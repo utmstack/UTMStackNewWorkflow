@@ -6,14 +6,6 @@ main_version=$(echo "${versions}" | jq -r '.version')
 auth_id=$(echo "$CM_PUB_AUTH" | jq -r '.id')
 auth_key=$(echo "$CM_PUB_AUTH" | jq -r '.key')
 
-declare -A service_workflow_map=(
-    ["agent-manager"]="used-docker-golang.yml"
-    ["backend"]="used-docker-java-11.yml"
-    ["frontend"]="used-docker-frontend.yml"
-    ["user-auditor"]="used-docker-java.yml"
-    ["web-pdf"]="used-docker-java.yml"
-)
-
 script_services=("agent-service" "agent-installer" "plugins-alerts" "plugins-aws" "plugins-azure" "plugins-bitdefender" "plugins-config" "plugins-events" "plugins-gcp" "plugins-geolocation" "plugins-inputs" "plugins-o365" "plugins-sophos" "plugins-stats")
 image_services=("agent-manager" "backend" "frontend" "user-auditor" "web-pdf")
 
@@ -31,9 +23,8 @@ for service in $(echo "${versions}" | jq -r 'keys_unsorted[] | select(. != "vers
         updated_script_services+=("$service")
     fi
     if [[ " ${image_services[@]} " =~ " ${service} " ]] && [ "${service_version}" != "${api_version}" ]; then
-        workflow=${service_workflow_map[$service]}
         version="${service_version}"
-        updated_image_services+=("{\"name\":\"$service\",\"version\":\"$version\",\"workflow\":\"$workflow\"}")
+        updated_image_services+=("{\"name\":\"$service\",\"version\":\"$version\"}")
     fi
 done
 
@@ -41,4 +32,4 @@ script_services_output=$(IFS=,; echo "${updated_script_services[*]}")
 image_services_output="[$(IFS=,; echo "${updated_image_services[*]}")]"
 
 echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
-echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
+echo "image_services=${image_services_json}" >> $GITHUB_OUTPUT
