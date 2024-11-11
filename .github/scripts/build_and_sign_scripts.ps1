@@ -20,10 +20,11 @@ Write-Output "Loading versions.json from: $versionsJsonPath"
 $versionsContent = Get-Content -Path $versionsJsonPath -Raw | ConvertFrom-Json
 Write-Output "Versions: $versionsContent"
 
-# Create a http client
-$httpClient = New-Object System.Net.Http.HttpClient
-$httpClient.DefaultRequestHeaders.Add("publisher-key", $auth.key)
-$httpClient.DefaultRequestHeaders.Add("publisher-id", $auth.id)
+# Set up headers
+$headers = @{
+    "publisher-key" = $auth.key
+    "publisher-id"  = $auth.id
+}
 
 # Upsert Master Version
 $masterChangelogPath = Join-Path $workspace "CHANGELOG.md"
@@ -35,34 +36,28 @@ $masterVersionData = @{
 } | ConvertTo-Json -Depth 10
 
 try {
-    $response = httpclient.PostAsync("$url/master-version", [System.Net.Http.StringContent]::new($masterVersionData, [System.Text.Encoding]::UTF8, "application/json")).Result
-    if ($response.IsSuccessStatusCode) {
-        $masterVersionId = $response.Content.ReadAsStringAsync().Result.Trim()
-        Write-Output "Master Version ID: $masterVersionId"
-    }
-    else {
-        $errorContent = $response.Content.ReadAsStringAsync().Result
-        throw "HTTP Request to /master-version failed: $($response.StatusCode): $errorContent"
-    }
+    $response = Invoke-RestMethod -Uri "$url/master-version" -Method Post -Headers $headers -ContentType 'application/json' -Body $masterVersionData
+    $masterVersionId = $response.Trim()
+    Write-Output "Master Version ID: $masterVersionId"
 }
 catch {
     Write-Error "Error in Master Version POST request: $_"
     throw $_
 }
 
-# Upsert Component Version, Scripts and Files
+# Upsert Component Version, Scripts, and Files
 foreach ($service in $services) {
     Write-Output "Processing service: $service"
     $path = $service -replace "-", "/"
     $servicePath = "$workspace/$path"
 
-    # Add especific pre-build steps here
+    # Add specific pre-build steps here
     if ($service -eq "agent-service") {
-        cd $servicePath/config
-        (Get-Content const.go) | Foreach-Object { $_ -replace 'const REPLACE_KEY string = ""', 'const REPLACE_KEY string = "$replaceKey"' } | Set-Content const.go
+        Set-Location "$servicePath/config"
+        (Get-Content const.go) | Foreach-Object { $_ -replace 'const REPLACE_KEY string = ""', "const REPLACE_KEY string = '$replaceKey'" } | Set-Content const.go
     }
 
-    cd $servicePath
+    Set-Location $servicePath
 
     # Upsert Component Version
     $changelogPath = Join-Path $workspace $service "CHANGELOG.md"
@@ -76,20 +71,14 @@ foreach ($service in $services) {
         description = $readme
         editions = @("Community", "Enterprise")
         master_version_id = $masterVersionId
-        name        = $service
-        version_name = $versionsContent.$service        
+        name = $service
+        version_name = $versionsContent.$service
     } | ConvertTo-Json -Depth 10
 
     try {
-        $response = $httpClient.PostAsync("$url/component-version", [System.Net.Http.StringContent]::new($componentVersionData, [System.Text.Encoding]::UTF8, "application/json")).Result
-        if ($response.IsSuccessStatusCode) {
-            $componentVersionId = $response.Content.ReadAsStringAsync().Result.Trim()
-            Write-Output "Component Version ID: $componentVersionId"
-        }
-        else {
-            $errorContent = $response.Content.ReadAsStringAsync().Result
-            throw "HTTP Request to /component-version failed: $($response.StatusCode): $errorContent"
-        }
+        $response = Invoke-RestMethod -Uri "$url/component-version" -Method Post -Headers $headers -ContentType 'application/json' -Body $componentVersionData
+        $componentVersionId = $response.Trim()
+        Write-Output "Component Version ID: $componentVersionId"
     }
     catch {
         Write-Error "Error in Component Version POST request: $_"
@@ -104,7 +93,7 @@ foreach ($service in $services) {
         $filePath = if ($fileName -like "*.zip" -or $fileName -like "*.yaml" -or $fileName -like "*.yml" -or $fileName -like "*.json") {
             Join-Path $servicePath "dependencies" $fileName
         } else {
-            # Buld and sign the file if it's not a dependency
+            # Build and sign the file if it's not a dependency
             $env:GOOS = $file.os
             $env:GOARCH = $file.arch
             Write-Output "Building $fileName for $($file.os) $($file.arch)..."
@@ -116,8 +105,8 @@ foreach ($service in $services) {
             }
             Join-Path $servicePath $fileName
         }
-        
-        # Prepare files for upload
+
+        # Prepare file data
         $fileData = @{
             version_id = $componentVersionId
             name = $fileName
@@ -128,34 +117,68 @@ foreach ($service in $services) {
             replace_previous = $file.replace_previous
         } | ConvertTo-Json -Depth 10
 
-        $boundary = [System.Guid]::NewGuid().ToString()
-        $multipartContent = New-Object System.Net.Http.MultipartFormDataContent($boundary)
-        $dataContent = New-Object System.Net.Http.StringContent($fileData, [System.Text.Encoding]::UTF8, "application/json")
-        $multipartContent.Add($dataContent, "data")
+        # Prepare multipart form data
+        $boundary = "----WebKitFormBoundary" + [System.Guid]::NewGuid().ToString("N")
+        $contentType = "multipart/form-data; boundary=$boundary"
 
-        $fileStream = [System.IO.File]::OpenRead($filePath)
-        $streamContent = New-Object System.Net.Http.StreamContent($fileStream)
-        $streamContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/octet-stream")
-        $multipartContent.Add($streamContent, "file", $fileName)
+        # Build the multipart form data as a string
+        $fileContent = [System.IO.File]::ReadAllBytes($filePath)
+        $fileContentEncoded = [System.Text.Encoding]::GetEncoding("ISO-8859-1").GetString($fileContent)
+
+        $multipartData = "--$boundary`r`n"
+        $multipartData += "Content-Disposition: form-data; name=`"data`"`r`n"
+        $multipartData += "Content-Type: application/json`r`n`r`n"
+        $multipartData += "$fileData`r`n"
+        $multipartData += "--$boundary`r`n"
+        $multipartData += "Content-Disposition: form-data; name=`"file`"; filename=`"$fileName`"`r`n"
+        $multipartData += "Content-Type: application/octet-stream`r`n`r`n"
+        $multipartData += "$fileContentEncoded`r`n"
+        $multipartData += "--$boundary--`r`n"
+
+        # Convert the multipart data to bytes
+        $multipartBytes = [System.Text.Encoding]::UTF8.GetBytes($multipartData)
+
+        # Create a WebRequest object
+        $webRequest = [System.Net.HttpWebRequest]::Create("$url/upload-file")
+        $webRequest.Method = "POST"
+        $webRequest.ContentType = $contentType
+        $webRequest.Headers.Add("publisher-key", $auth.key)
+        $webRequest.Headers.Add("publisher-id", $auth.id)
+        $webRequest.ContentLength = $multipartBytes.Length
+
+        # Write the multipart data to the request stream
+        $requestStream = $webRequest.GetRequestStream()
+        $requestStream.Write($multipartBytes, 0, $multipartBytes.Length)
+        $requestStream.Close()
 
         try {
-            $response = $httpClient.PostAsync("$url/upload-file", $multipartContent).Result
-            if ($response.IsSuccessStatusCode) {
-                $responseContent = $response.Content.ReadAsStringAsync().Result
-                Write-Output "Upload Response for ${fileName}:"
-                Write-Output $responseContent
-            }
-            else {
-                $errorContent = $response.Content.ReadAsStringAsync().Result
-                throw "HTTP Request to /upload-file failed: $($response.StatusCode): $errorContent"
-            }
+            $response = $webRequest.GetResponse()
+            $responseStream = $response.GetResponseStream()
+            $reader = New-Object System.IO.StreamReader($responseStream)
+            $responseContent = $reader.ReadToEnd()
+            Write-Output "Upload Response for ${fileName}:"
+            Write-Output $responseContent
+            $reader.Close()
+            $responseStream.Close()
+            $response.Close()
         }
         catch {
-            Write-Error "Error in file upload for ${fileName}: $_"
+            $errorResponse = $_.Exception.Response
+            if ($errorResponse -ne $null) {
+                $responseStream = $errorResponse.GetResponseStream()
+                $reader = New-Object System.IO.StreamReader($responseStream)
+                $errorContent = $reader.ReadToEnd()
+                Write-Error "HTTP Request to /upload-file failed: $($errorResponse.StatusCode): $errorContent"
+                $reader.Close()
+                $responseStream.Close()
+            }
+            else {
+                Write-Error "Error in file upload for ${fileName}: $_"
+            }
             throw $_
         }
-    }    
+    }
 }
 
-cd $workspace
+Set-Location $workspace
 Remove-Item -Path "./*" -Recurse -Force
