@@ -4,10 +4,7 @@ on:
   release:
     types: [ 'released' ]
   push:
-    branches: [ 'main', 'feature/**' ]
-  pull_request_review:
-    types: [submitted]
-
+    branches: [ 'feature/**' ]
 jobs:
   setup_environment:
     name: Setup Environment
