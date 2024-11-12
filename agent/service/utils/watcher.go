@@ -49,7 +49,6 @@ loop:
 func WatchFolder(logType string, logsPath string, logLinesChan chan string) {
 	stopChan := make(chan bool)
 	latestLog := ""
-	latestLine := ""
 	pattern := regexp.MustCompile(fmt.Sprintf(`%s-(\d+)(?:-(\d+))?\.ndjson`, logType))
 
 	ticker := time.NewTicker(5 * time.Second)
