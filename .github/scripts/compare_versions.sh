@@ -25,8 +25,8 @@ api_versions=$(curl -s -H "publisher-key: $auth_key" -H "publisher-id: $auth_id"
 updated_script_services=()
 updated_image_services=()
 
-if ! echo "$api_versions" | jq empty >/dev/null 2>&1; then
-    echo "Error: API response is not valid JSON."
+if ! echo "$api_versions" | jq -e 'if type=="object" then . else empty end' >/dev/null 2>&1; then
+    echo "Error: API response is not a valid JSON object."
     echo "API versions: $api_versions"
     echo "Continuing with the script..."
 
