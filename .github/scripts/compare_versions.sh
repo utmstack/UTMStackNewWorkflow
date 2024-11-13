@@ -47,6 +47,6 @@ echo "Script Services Updated: $script_services_output"
 echo "Image Services Updated: $image_services_output"
 
 echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
-echo "image_services=${image_services_json}" >> $GITHUB_OUTPUT
+echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
 
 $GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$image_services_output"
