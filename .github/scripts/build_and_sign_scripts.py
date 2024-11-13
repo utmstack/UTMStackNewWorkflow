@@ -293,23 +293,6 @@ def main():
         print(f"Changing directory back to workspace: {workspace}")
         os.chdir(workspace)
 
-        print("Cleaning up workspace...")
-        # Remove all files and directories in the workspace
-        for filename in os.listdir('.'):
-            file_path = os.path.join('.', filename)
-            try:
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                    print(f"Deleted file: {file_path}")
-                elif os.path.isdir(file_path):
-                    shutil.rmtree(file_path)
-                    print(f"Deleted directory: {file_path}")
-            except Exception as e:
-                print(f'Failed to delete {file_path}. Reason: {e}')
-                raise
-
-        print("Cleanup completed successfully.")
-
     except Exception as e:
         print(f"Script failed: {e}")
         sys.exit(1)
