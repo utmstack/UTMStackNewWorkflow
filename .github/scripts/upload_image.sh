@@ -57,7 +57,6 @@ echo "Master Version ID: $master_version_id"
 
 for service in $services; do
     echo "Processing service: $service"
-    version = $(echo "$service" | jq -r '.version')
     version=$(echo "$versions_content" | jq -r --arg s "$service" '.[$s]')
     service_path="$workspace/$service"
 
