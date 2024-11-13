@@ -59,14 +59,7 @@ echo "Master Version ID: $master_version_id"
 echo "$services_array" | while IFS= read -r service; do
     name=$(echo "$service" | jq -r '.name')
     version=$(echo "$service" | jq -r '.version')
-
-    echo "Processing service: $name with version: $version"
-    if [ "$name" = "agent-manager" ]; then
-        path="$name"
-    else
-        path="${name//-//}"
-    fi
-    service_path="$workspace/$path"
+    service_path="$workspace/$name"
 
     changelog_path="$workspace/$path/CHANGELOG.md"
     readme_path="$workspace/$path/README.md"
