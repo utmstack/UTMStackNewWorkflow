@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 if [ -z "$1" ]; then
   echo "No services provided to send."
   exit 1
@@ -62,8 +60,8 @@ echo "$services_array" | while IFS= read -r service; do
     name=$(echo "$service" | jq -r '.name')
     version=$(echo "$service" | jq -r '.version')
 
-    echo "Processing service: $service"
-    path="${service//-//}"
+    echo "Processing service: $name with version: $version"
+    path="${name//-//}"
     service_path="$workspace/$path"
 
     changelog_path="$workspace/$path/CHANGELOG.md"
@@ -81,8 +79,8 @@ echo "$services_array" | while IFS= read -r service; do
         --arg changelog "$changelog" \
         --arg description "$readme" \
         --arg master_version_id "$master_version_id" \
-        --arg name "$service" \
-        --arg version_name "$(echo "$versions_content" | jq -r --arg s "$service" '.[$s]')" \
+        --arg name "$name" \
+        --arg version_name "$(echo "$versions_content" | jq -r --arg s "$name" '.[$s]')" \
         '{changelog: $changelog, description: $description, editions: ["Community", "Enterprise"], master_version_id: $master_version_id, name: $name, version_name: $version_name}')
 
     component_version_response=$(curl -s -X POST "$url/component-version" \

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 echo "Loading file versions.json from: $GITHUB_WORKSPACE/versions.json"
 if [ ! -f "$GITHUB_WORKSPACE/versions.json" ]; then
     echo "Error: versions.json not found at $GITHUB_WORKSPACE/versions.json"
@@ -27,7 +25,6 @@ updated_image_services=()
 
 if ! echo "$api_versions" | jq -e 'if type=="object" then . else empty end' >/dev/null 2>&1; then
     echo "Error: API response is not a valid JSON object."
-    echo "API versions: $api_versions"
     echo "Continuing with the script..."
 
     for service in "${script_services[@]}"; do
@@ -35,8 +32,8 @@ if ! echo "$api_versions" | jq -e 'if type=="object" then . else empty end' >/de
     done
 
     for service in "${image_services[@]}"; do
-        version="${versions[$service]}"
-        updated_image_services+=("{\"name\":\"$service\",\"version\":\"${versions[$service]}\"}")
+        version=$(echo "${versions}" | jq -r --arg s "$service" '.[$s]')
+        updated_image_services+=("{\"name\":\"$service\",\"version\":\"$version\"}")
     done
 else
     echo "URL: $api_url"
@@ -66,16 +63,11 @@ script_services_output=$(IFS=,; echo "${updated_script_services[*]}")
 if [ ${#updated_image_services[@]} -eq 0 ]; then
     image_services_output="[]"
 else
-    image_services_output="[$(IFS=,; echo "${updated_image_services[*]}")]"
+    image_services_output=$(printf '%s\n' "${updated_image_services[@]}" | jq -s '.')
 fi
 
 echo "Script Services Updated: $script_services_output"
 echo "Image Services Updated: $image_services_output"
-
-if ! echo "$image_services_output" | jq empty >/dev/null 2>&1; then
-    echo "Invalid JSON for image_services: $image_services_output"
-    exit 1
-fi
 
 echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
 echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
