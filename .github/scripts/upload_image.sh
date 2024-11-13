@@ -7,7 +7,7 @@ fi
 
 image_services=$1
 echo "Sending the following image services to the server: $image_services"
-services=$(echo "$image_services" | sed "s/^\[\(.*\)\]$/\1/" | tr -d "'" | tr "," "\n" | tr -d " ")
+services=$(echo "$image_services" | sed "s/^\[\(.*\)\]$/\1/" | tr -d "'" | tr "," "\n" | sed 's/"//g')
 
 if ! echo "$image_services" | jq empty >/dev/null 2>&1; then
     echo "Error: Provided image_services is not valid JSON."
@@ -65,6 +65,8 @@ for service in $services; do
 
     if [ ! -f "$changelog_path" ] || [ ! -f "$readme_path" ]; then
         echo "Error: Missing CHANGELOG.md or README.md for service $name"
+        echo "CHANGELOG.md: $changelog_path"
+        echo "README.md: $readme_path"
         exit 1
     fi
 
