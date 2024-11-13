@@ -92,7 +92,7 @@ jobs:
           CM_PUB_AUTH_QA: ${{ secrets.CM_PUB_AUTH_QA }}
           CM_PUB_AUTH_PROD: ${{ secrets.CM_PUB_AUTH_PROD }}
           AGENT_SECRET_PREFIX: ${{ secrets.AGENT_SECRET_PREFIX }}
-          SIGN_CERT: ${{ secrets.SIGN_CERT }}
+          SIGN_CERT: ${{ vars.SIGN_CERT }}
           SIGN_KEY: ${{ secrets.SIGN_KEY }}
           SIGN_CONTAINER: ${{ secrets.SIGN_CONTAINER }}
           GITHUB_WORKSPACE: ${{ github.workspace }}
