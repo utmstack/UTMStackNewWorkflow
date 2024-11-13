@@ -57,10 +57,12 @@ else
 fi
 
 script_services_output=$(IFS=,; echo "${updated_script_services[*]}")
+image_services_output=$(printf '%s\n' "${updated_image_services[@]}" | jq -R . | jq -s .)
+
 echo "Script Services Updated: $script_services_output"
-echo "Image Services Updated: $updated_image_services"
+echo "Image Services Updated: $image_services_output"
 
 echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
-echo "image_services=${updated_image_services}" >> $GITHUB_OUTPUT
+echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
 
-$GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$updated_image_services"
+$GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$image_services_output"

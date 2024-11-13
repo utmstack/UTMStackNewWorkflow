@@ -129,7 +129,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ needs.setup_services.outputs.image_services }}
+        service: ${{ fromJson(needs.setup_services.outputs.image_services) }}
     uses: ./.github/workflows/used-runner.yml
     with:
       microservice: ${{ matrix.service }}
