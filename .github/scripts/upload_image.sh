@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ -z "$1" ]; then
   echo "No services provided to send."
   exit 1
@@ -7,6 +9,11 @@ fi
 
 image_services=$1
 echo "Sending the following image services to the server: $image_services"
+
+if ! echo "$image_services" | jq empty >/dev/null 2>&1; then
+    echo "Error: Provided image_services is not valid JSON."
+    exit 1
+fi
 
 services_array=$(echo "$image_services" | jq -c '.[]')
 
@@ -21,11 +28,19 @@ auth_id=$(echo "$CM_PUB_AUTH" | jq -r '.id')
 auth_key=$(echo "$CM_PUB_AUTH" | jq -r '.key')
 
 versions_json_path="$workspace/versions.json"
-echo "Loading versions.json from: $versions_json_path"
+if [ ! -f "$versions_json_path" ]; then
+    echo "Error: versions.json not found at $versions_json_path"
+    exit 1
+fi
+
 versions_content=$(cat "$versions_json_path")
 echo "Versions: $versions_content"
 
 master_changelog_path="$workspace/CHANGELOG.md"
+if [ ! -f "$master_changelog_path" ]; then
+    echo "Error: CHANGELOG.md not found at $master_changelog_path"
+    exit 1
+fi
 master_changelog=$(cat "$master_changelog_path")
 
 master_version_data=$(jq -n \
@@ -43,13 +58,24 @@ master_version_response=$(curl -s -X POST "$url/master-version" \
 master_version_id="$master_version_response"
 echo "Master Version ID: $master_version_id"
 
-for service in "${services[@]}"; do
+echo "$services_array" | while IFS= read -r service; do
+    name=$(echo "$service" | jq -r '.name')
+    version=$(echo "$service" | jq -r '.version')
+
     echo "Processing service: $service"
     path="${service//-//}"
     service_path="$workspace/$path"
 
-    changelog=$(cat "$workspace/$service/CHANGELOG.md")
-    readme=$(cat "$workspace/$service/README.md")
+    changelog_path="$workspace/$path/CHANGELOG.md"
+    readme_path="$workspace/$path/README.md"
+
+    if [ ! -f "$changelog_path" ] || [ ! -f "$readme_path" ]; then
+        echo "Error: Missing CHANGELOG.md or README.md for service $name"
+        exit 1
+    fi
+
+    changelog=$(cat "$changelog_path")
+    readme=$(cat "$readme_path")
 
     component_version_data=$(jq -n \
         --arg changelog "$changelog" \
