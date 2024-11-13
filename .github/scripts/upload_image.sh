@@ -5,8 +5,8 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-image_services=$1
-echo "Sending the following image services to the server: ${image_services[@]}"
+image_services=$(echo "$1" | jq -r '.[]')
+echo "Sending the following image services to the server: $image_services"
 
 workspace="$GITHUB_WORKSPACE"
 url="$CM_API"
