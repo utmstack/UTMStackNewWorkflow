@@ -6,18 +6,11 @@ if [ -z "$1" ]; then
 fi
 
 image_services=$1
-echo "Sending the following image services to the server: $image_services"
-services=$(echo "$image_services" | sed "s/^\[\(.*\)\]$/\1/" | tr -d "'" | tr "," "\n" | sed 's/"//g')
-
-if ! echo "$image_services" | jq empty >/dev/null 2>&1; then
-    echo "Error: Provided image_services is not valid JSON."
-    exit 1
-fi
+echo "Sending the following image services to the server: ${image_services[@]}"
 
 workspace="$GITHUB_WORKSPACE"
 url="$CM_API"
 
-echo "Services: ${services[*]}"
 echo "Workspace: $workspace"
 echo "URL: $url"
 
@@ -55,7 +48,7 @@ master_version_response=$(curl -s -X POST "$url/master-version" \
 master_version_id="$master_version_response"
 echo "Master Version ID: $master_version_id"
 
-for service in $services; do
+for service in $image_services; do
     echo "Processing service: $service"
     version=$(echo "$versions_content" | jq -r --arg s "$service" '.[$s]')
     service_path="$workspace/$service"

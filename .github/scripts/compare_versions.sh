@@ -32,7 +32,7 @@ if ! echo "$api_versions" | jq -e 'if type=="object" then . else empty end' >/de
     done
 
     for service in "${image_services[@]}"; do
-        updated_image_services+=("\"$service\"")
+        updated_image_services+=("$service")
     done
 else
     echo "URL: $api_url"
@@ -51,23 +51,16 @@ else
         fi
         if [[ " ${image_services[@]} " =~ " ${service} " ]] && [ "${service_version}" != "${api_version}" ]; then
             echo "Update image service detected: $service"
-            updated_image_services+=("\"$service\"")
+            updated_image_services+=("$service")
         fi
     done
 fi
 
 script_services_output=$(IFS=,; echo "${updated_script_services[*]}")
-
-if [ ${#updated_image_services[@]} -eq 0 ]; then
-    image_services_output="[]"
-else
-    image_services_output="["$(IFS=,; echo "${updated_image_services[*]}")"]"
-fi
-
 echo "Script Services Updated: $script_services_output"
-echo "Image Services Updated: $image_services_output"
+echo "Image Services Updated: $updated_image_services"
 
 echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
-echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
+echo "image_services=${updated_image_services}" >> $GITHUB_OUTPUT
 
-$GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$image_services_output"
+$GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$updated_image_services"
