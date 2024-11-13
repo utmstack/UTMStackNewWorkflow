@@ -126,16 +126,12 @@ jobs:
       - setup_services
       - setup_environment
     if: ${{ needs.setup_services.outputs.image_services != '[]' }}
-    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.setup_services.outputs.image_services) }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Call Reusable Workflow
-        uses: ./.github/workflows/used-runner.yml
-        with:
-          microservice: ${{ matrix.name }}
-          environment: ${{ needs.setup_environment.outputs.env_tag }}
-          version: ${{ matrix.version }}
+        service: ${{ needs.setup_services.outputs.image_services }}
+    uses: ./.github/workflows/used-runner.yml
+    with:
+      microservice: ${{ matrix.service }}
+      environment: ${{ needs.setup_environment.outputs.env_tag }}
+    secrets: inherit

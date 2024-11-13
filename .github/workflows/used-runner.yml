@@ -8,9 +8,6 @@ on:
       microservice:
         required: true
         type: string
-      version:
-        required: true
-        type: string
 
 jobs:
   prepare_deployment:
@@ -48,7 +45,6 @@ jobs:
     with:
       image_name: ${{ inputs.microservice }}
       environment: ${{inputs.environment}}
-      version: ${{inputs.version}}
 
   golang_deployment:
     name: Golang deployment
@@ -58,7 +54,6 @@ jobs:
     with:
       image_name: ${{ inputs.microservice }}
       environment: ${{inputs.environment}}
-      version: ${{inputs.version}}
 
   java_11_deployment:
     name: Java 11 deployment
@@ -68,7 +63,6 @@ jobs:
     with:
       image_name: ${{ inputs.microservice }}
       environment: ${{inputs.environment}}
-      version: ${{inputs.version}}
 
   java_deployment:
     name: Java deployment
@@ -78,4 +72,3 @@ jobs:
     with:
       image_name: ${{ inputs.microservice }}
       environment: ${{inputs.environment}}
-      version: ${{inputs.version}}

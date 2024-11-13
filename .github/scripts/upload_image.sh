@@ -7,18 +7,17 @@ fi
 
 image_services=$1
 echo "Sending the following image services to the server: $image_services"
+services=$(echo "$image_services" | sed "s/^\[\(.*\)\]$/\1/" | tr -d "'" | tr "," "\n" | tr -d " ")
 
 if ! echo "$image_services" | jq empty >/dev/null 2>&1; then
     echo "Error: Provided image_services is not valid JSON."
     exit 1
 fi
 
-services_array=$(echo "$image_services" | jq -c '.[]')
-
 workspace="$GITHUB_WORKSPACE"
 url="$CM_API"
 
-echo "Services: ${services_array[*]}"
+echo "Services: ${services[*]}"
 echo "Workspace: $workspace"
 echo "URL: $url"
 
@@ -56,13 +55,14 @@ master_version_response=$(curl -s -X POST "$url/master-version" \
 master_version_id="$master_version_response"
 echo "Master Version ID: $master_version_id"
 
-echo "$services_array" | while IFS= read -r service; do
-    name=$(echo "$service" | jq -r '.name')
-    version=$(echo "$service" | jq -r '.version')
-    service_path="$workspace/$name"
+for service in $services; do
+    echo "Processing service: $service"
+    version = $(echo "$service" | jq -r '.version')
+    version=$(echo "$versions_content" | jq -r --arg s "$service" '.[$s]')
+    service_path="$workspace/$service"
 
-    changelog_path="$workspace/$path/CHANGELOG.md"
-    readme_path="$workspace/$path/README.md"
+    changelog_path="$service_path/CHANGELOG.md"
+    readme_path="$service_path/README.md"
 
     if [ ! -f "$changelog_path" ] || [ ! -f "$readme_path" ]; then
         echo "Error: Missing CHANGELOG.md or README.md for service $name"
@@ -76,8 +76,8 @@ echo "$services_array" | while IFS= read -r service; do
         --arg changelog "$changelog" \
         --arg description "$readme" \
         --arg master_version_id "$master_version_id" \
-        --arg name "$name" \
-        --arg version_name "$(echo "$versions_content" | jq -r --arg s "$name" '.[$s]')" \
+        --arg name "$service" \
+        --arg version_name "$version" \
         '{changelog: $changelog, description: $description, editions: ["Community", "Enterprise"], master_version_id: $master_version_id, name: $name, version_name: $version_name}')
 
     component_version_response=$(curl -s -X POST "$url/component-version" \

@@ -32,8 +32,7 @@ if ! echo "$api_versions" | jq -e 'if type=="object" then . else empty end' >/de
     done
 
     for service in "${image_services[@]}"; do
-        version=$(echo "${versions}" | jq -r --arg s "$service" '.[$s]')
-        updated_image_services+=("{\"name\":\"$service\",\"version\":\"$version\"}")
+        updated_image_services+=("\"$service\"")
     done
 else
     echo "URL: $api_url"
@@ -52,8 +51,7 @@ else
         fi
         if [[ " ${image_services[@]} " =~ " ${service} " ]] && [ "${service_version}" != "${api_version}" ]; then
             echo "Update image service detected: $service"
-            version="${service_version}"
-            updated_image_services+=("{\"name\":\"$service\",\"version\":\"$version\"}")
+            updated_image_services+=("\"$service\"")
         fi
     done
 fi
@@ -63,15 +61,13 @@ script_services_output=$(IFS=,; echo "${updated_script_services[*]}")
 if [ ${#updated_image_services[@]} -eq 0 ]; then
     image_services_output="[]"
 else
-    image_services_output=$(printf '%s\n' "${updated_image_services[@]}" | jq -s '.')
+    image_services_output="["$(IFS=,; echo "${updated_image_services[*]}")"]"
 fi
 
 echo "Script Services Updated: $script_services_output"
 echo "Image Services Updated: $image_services_output"
 
 echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
-echo "image_services<<EOF" >> $GITHUB_OUTPUT
-echo "$image_services_output" >> $GITHUB_OUTPUT
-echo "EOF" >> $GITHUB_OUTPUT
+echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
 
 $GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$image_services_output"
