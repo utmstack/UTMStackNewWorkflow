@@ -62,7 +62,11 @@ image_services_output=$(printf '%s\n' "${updated_image_services[@]}" | jq -R . |
 echo "Script Services Updated: $script_services_output"
 echo "Image Services Updated: $image_services_output"
 
-echo "script_services=${script_services_output}" >> $GITHUB_OUTPUT
-echo "image_services=${image_services_output}" >> $GITHUB_OUTPUT
+{
+  echo "script_services=${script_services_output}"
+  echo "image_services<<EOF"
+  echo "$image_services_output"
+  echo "EOF"
+} >> "$GITHUB_OUTPUT"
 
 $GITHUB_WORKSPACE/.github/scripts/upload_image.sh "$image_services_output"
