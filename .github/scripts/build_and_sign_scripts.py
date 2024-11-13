@@ -225,6 +225,8 @@ def main():
                         print(f"Error building {file_name}: {e.stderr}")
                         raise
 
+                    sign_key_str = "{{" + sign_key + "}}"
+
                     if os.environ['GOOS'].lower() == 'windows':
                         print(f"Signing {file_name}...")
                         # Run 'signtool' command
@@ -236,7 +238,7 @@ def main():
                             '/td', 'SHA256',
                             '/f', sign_cert,
                             '/csp', 'eToken Base Cryptographic Provider',
-                            '/k', f"[{{{sign_key}}}]={sign_container}",
+                            '/k', f"[{{{{{sign_key}}}}}]={sign_container}",
                             file_name
                         ]
                         try:
