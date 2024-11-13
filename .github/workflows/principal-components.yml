@@ -125,7 +125,7 @@ jobs:
     needs: 
       - setup_services
       - setup_environment
-    if: ${{ length(fromJson(needs.setup_services.outputs.image_services)) > 0 }}
+    if: ${{ needs.setup_services.outputs.image_services != '[]' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
