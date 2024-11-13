@@ -61,7 +61,11 @@ echo "$services_array" | while IFS= read -r service; do
     version=$(echo "$service" | jq -r '.version')
 
     echo "Processing service: $name with version: $version"
-    path="${name//-//}"
+    if [ "$name" = "agent-manager" ]; then
+        path="$name"
+    else
+        path="${name//-//}"
+    fi
     service_path="$workspace/$path"
 
     changelog_path="$workspace/$path/CHANGELOG.md"
